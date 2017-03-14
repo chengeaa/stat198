@@ -17,3 +17,21 @@ searchTwitter("Berkeley",
               since = "2017-02-26")
 ```
 
+```{r}
+data = read.delim(file = "C://Users/Erik Cheng/stat198/ICWSM2013_Paper_187_Data/all_streaming_api.txt", sep = "\n", header = FALSE, colClasses = c("character"))
+```
+  
+  
+```{r}
+testing = function(k){showStatus(data[k,1])}
+testTweets = sapply(c(1:10), testing)
+getHandle = function(tweet){ #takes in tweet object and returns its handle
+  return (tweet$screenName)
+}
+testHandles = sapply(testTweets, getHandle)
+```
+
+```{r}
+timelines = sapply(testHandles,userTimeline, n = 3200)
+```
+
