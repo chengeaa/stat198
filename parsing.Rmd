@@ -23,15 +23,44 @@ data = read.delim(file = "C://Users/Erik Cheng/stat198/ICWSM2013_Paper_187_Data/
   
   
 ```{r}
-testing = function(k){showStatus(data[k,1])}
-testTweets = sapply(c(1:10), testing)
+testing = function(k){
+  out = (tryCatch(
+    {
+     showStatus(data[k,1]) 
+    },
+    error = function(cond){
+      message(paste("bleh"), as.character(k))
+      
+    }
+    
+    )
+  )
+  return(out)
+} 
+testTweets = sapply(c(1:10), testing) 
 getHandle = function(tweet){ #takes in tweet object and returns its handle
   return (tweet$screenName)
+}
+getTime = function(tweet) {
+  return (tweet$created)
 }
 testHandles = sapply(testTweets, getHandle)
 ```
 
 ```{r}
 timelines = sapply(testHandles,userTimeline, n = 3200)
+```
+
+```{r}
+fullTweets = sapply(c(1:1000), testing)
+```
+
+```{r}
+tweetTimes = sapply(fullTweets, getTime)
+```
+
+```{r}
+nulls = (lapply(fullTweets,is.null))
+
 ```
 
