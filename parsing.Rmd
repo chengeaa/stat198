@@ -1,0 +1,19 @@
+---
+title: "Twitter study"
+author: "me"
+date: "February 28, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+require(twitteR)
+setup_twitter_oauth("vRb1BPv0mp85t5uk99MD5GdvY","vbEKOCu58TnGx3EKTmGyAV9zZ08nRYUCDvTrDfcw7dTR7Snf8k")
+```
+
+```{r}
+searchTwitter("Berkeley",
+              geocode='37.8719,-122.2585,1mi', 
+              until="2017-02-28",
+              since = "2017-02-26")
+```
+
