@@ -5,7 +5,7 @@ require(twitteR)
 require(readr)
 require(RJSONIO)
 
-data = read.delim(file = "C://Users/Erik Cheng/stat198/ICWSM2013_Paper_187_Data/all_streaming_api.txt", sep = "\n", header = FALSE, colClasses = c("character"))
+data = read.delim(file = "all_streaming_api.txt", sep = "\n", header = FALSE, colClasses = c("character"))
 #A function for getting a tweet object given a TweetID (as string)
 getTweet = function(k){
   out = (tryCatch(
