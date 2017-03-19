@@ -1,8 +1,9 @@
 ###########
 ###SETUP###
 ###########
+install.packages(twitteR)
 require(twitteR)
-require(readr)
+require(readr) 
 require(RJSONIO)
 
 data = read.delim(file = "all_streaming_api.txt", sep = "\n", header = FALSE, colClasses = c("character"))
