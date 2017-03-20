@@ -1,8 +1,7 @@
 ###########
 ###SETUP###
 ###########
-install.packages(c("twitteR"), lib = "~/libs")
-library('twitteR', lib = "~/libs")
+library('twitteR')
 require(readr) 
 require(RJSONIO)
 
@@ -34,17 +33,17 @@ getTime = function(tweet) { #takes in tweet object and returns creation time
 ###LETS GET CRANKIN###
 ######################
 
-low = 1
-high = 1000
+low = 51001
+high = 52000
 lasttime  = Sys.time()
 
 while(low < length(data[,1])) {
   currtime = Sys.time()
-  if((round(difftime(currtime, lasttime, units = "mins")) >= 15) || low == 1){
+  if((round(difftime(currtime, lasttime, units = "mins")) >= 15) || low == 51001){
     if(high > length(data[,1])) {
       high = length(data[,1])
     }
-    setup_twitter_oauth("vRb1BPv0mp85t5uk99MD5GdvY","vbEKOCu58TnGx3EKTmGyAV9zZ08nRYUCDvTrDfcw7dTR7Snf8k")  
+    setup_twitter_oauth("vRb1BPv0mp85t5uk99MD5GdvY","vbEKOCu58TnGx3EKTmGyAV9zZ08nRYUCDvTrDfcw7dTR7Snf8k","2934227960-io1QWn50I2n5D9tpwp8ZQittP9cVsBsGdEBCPRp", "tlaDmitkS228IOPy25VLlnZWP4PFnpIiVuaZgeeoLKkL9")  
     fullTweets = sapply(c(low:high), getTweet)
     nulls = which(unlist(lapply(fullTweets,is.null)))
     fullTweetsdf = twListToDF(fullTweets[-nulls])
