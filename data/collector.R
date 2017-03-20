@@ -1,8 +1,8 @@
 ###########
 ###SETUP###
 ###########
-install.packages(twitteR)
-require(twitteR)
+install.packages(c("twitteR"), lib = "~/libs")
+library('twitteR', lib = "~/libs")
 require(readr) 
 require(RJSONIO)
 
