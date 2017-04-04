@@ -1,0 +1,9 @@
+Measuring sampling bias (how)
+twitter ID
+	- counts per day/week
+	- firehose vs streaming
+	- proportion sampled per twitterID
+		- should follow binom
+	- test variation between samples
+	- ? does rate vary with volume of requests
+	- 
