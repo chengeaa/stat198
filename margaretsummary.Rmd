@@ -1,0 +1,77 @@
+---
+title: "Summary statistics"
+author: "Margaret"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Set Up
+
+```{r, load data}
+require(twitteR)
+require(ggplot2)
+require(plyr)
+
+path_time = "deborah_fields.txt"
+path_streaming = "data/all_streaming_api.txt"
+path_firehose = "data/all_firehose.txt"
+
+tweet_time = read.table(path_time, sep = ",")
+tweet_streaming = unlist(read.table(path_streaming, sep = "\n"))
+tweet_firehose = unlist(read.table(path_firehose, sep = "\n"))
+names(tweet_time) = c("time", "tweetID", "usernameID")
+names(tweet_streaming) = "tweetID"
+names(tweet_firehose) = "tweetID"
+
+tweet_time$streaming_present = tweet_time$tweetID %in% tweet_streaming
+tweet_time$firehose_present = tweet_time$tweetID %in% tweet_firehose
+
+```
+
+#Some Simple Tests
+
+```{r, some tests}
+sum(is.na(tweet_time$streaming_present))
+#should be zero
+sum(is.na(tweet_time$firehose_present))
+#should be zero
+
+sum(!(tweet_firehose %in% tweet_time$tweetID))
+#should be zero
+
+```
+
+#Summary Data
+
+```{r, summary data}
+summary(tweet_time$streaming_present)
+summary(tweet_time$firehose_present)
+head(tweet_time$time)
+tail(tweet_time$time)
+summary(as.character(tweet_time$time) %in% levels(tweet_time$time))
+
+```
+
+#Plotting
+
+```{r, plotting}
+#convert date format
+tweet_time$converted_time = as.Date(as.character(tweet_time$time))
+
+#plot_tweets = ggplot(tweet_time) + geom_line(aes(x = converted_time, y = ...count...))
+plot_tweets = ggplot(tweet_time) + geom_bar(aes(x = converted_time, fill = streaming_present), position = "dodge")
+plot_tweets
+
+#Replicate Study's Graph
+tweet_frequency = count(tweet_time$converted_time)
+streaming_frequency = count(tweet_time$converted_time[tweet_time$streaming_present])
+
+plot_frequency = ggplot() + geom_line(aes(x = tweet_frequency$x, y = tweet_frequency$freq), color = "red") + geom_line(aes(x = streaming_frequency$x, y = streaming_frequency$freq), color = "black")
+plot_frequency
+
+```
+
+
