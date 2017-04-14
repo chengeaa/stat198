@@ -1,0 +1,80 @@
+---
+title: "Explore"
+author: "me"
+date: "April 11, 2017"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+require(twitteR)
+require(ggplot2)
+```
+
+```{r}
+path_time= "deborah_fields.txt"
+path_streaming = "data/all_streaming_api.txt"
+path_firehose = "data/all_firehose.txt"
+
+alldata = read.table(path_time, sep = ",", colClasses = c("character"))
+tweet_streaming = unlist(read.table(path_streaming, sep = "\n", colClasses = c("character")))
+tweet_firehose = unlist(read.table(path_firehose, sep = "\n", colClasses = c("character")))
+names(alldata) = c("time", "tweetID", "usernameID")
+
+s = data.frame(tweet_streaming)
+f = data.frame(tweet_firehose)
+
+# stimes = merge(s, tweet_time) gg
+# ftimes = merge(f, tweet_streaming) gg
+
+(sum(s$tweet_streaming %in% alldata$tweetID)/nrow(s))
+(sum(f$tweet_firehose %in% alldata$tweetID)/nrow(f))
+
+which(!s$tweet_streaming %in% alldata$tweetID)
+alldata$instream = (alldata$tweetID %in% tweet_streaming)
+alldata$infirehose = (alldata$tweetID %in% tweet_firehose)
+
+length(unique(alldata$usernameID))/nrow(alldata)
+
+
+```
+```{r}
+# byuser = aggregate(alldata$tweetID, by = list(alldata$usernameID), FUN = count)
+# the above line was left to run overnight and still didn't complete. sad.
+
+subset = alldata[sample(1:nrow(alldata), 50000),]
+byusersubset = aggregate(subset$tweetID, by = list(subset$usernameID), FUN = length)
+morethan5 = byusersubset[byusersubset$x > 5,]
+subset$inmorethan5 = subset$usernameID %in% morethan5$Group.1
+subset$inmorethan5andstream = subset$inmorethan5&subset$instream
+#test statistic is
+sum(subset$instream)/nrow(subset) #41% of the firehose subset was represented in the stream
+sum(subset$inmorethan5)/ nrow(subset) #69% of the tweets came from the more than 5 tweeters
+nrow(morethan5)/nrow(subset) #2% of users have more than 5 tweets in the subset
+sum(subset$inmorethan5andstream)/nrow(subset) #31% of tweets were both in the stream and came from more than 5ers
+
+morethan5tweets = subset[subset$usernameID %in% morethan5$Group.1,]
+```
+
+```{r}
+#hypothesis testing
+instreams = numeric()
+inmorethan5s = numeric()
+inboths = numeric()morethan5s = append(inmorethan5s, sum(bs %in% morethan5tweets$tweetID)/nrow(subset))
+  inboths = append(inboths, sum(bs%in% morethan5tweets$tweetID &bs%in%tweet_streaming)/nrow(subset))
+}
+for (i in 1:1000) {
+  bs = sample(subset$tweetID, size = nrow(subset), replace = TRUE)
+  instreams = append(instreams, sum(bs %in% tweet_streaming)/nrow(subset))
+  in
+
+sum(sum(subset$inmorethan5)/nrow(subset) > inmorethan5s)/length(inmorethan5s)
+sum(sum(subset$inmorethan5andstream)/nrow(subset) >inboths)/length(inboths)
+
+inbothsdf = data.frame(inboths)
+ggplot(inbothsdf) + geom_histogram(aes(x = inboths), bins = 20)
+``` 
+
+```{r}
+ggplot(alldata)
+```
+
