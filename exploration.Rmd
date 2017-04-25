@@ -5,6 +5,49 @@ date: "April 11, 2017"
 output: html_document
 ---
 
+#####DEPRECATED CODE#########
+
+```{r eval=FALSE}
+#hypothesis testing
+instreams = numeric()
+inmorethan5s = numeric()
+inboths = numeric()
+
+
+for (i in 1:10000) {
+  bs = sample(subset$tweetID, size = nrow(subset), replace = TRUE)
+  instreams = append(instreams, sum(bs %in% tweet_streaming)/nrow(subset))
+  morethan5s = append(inmorethan5s, sum(bs %in% morethan5tweets$tweetID)/nrow(subset))
+  inboths = append(inboths, sum(bs%in% morethan5tweets$tweetID &bs%in%tweet_streaming)/nrow(subset))
+}
+
+sum(sum(subset$inmorethan5)/nrow(subset) > inmorethan5s)/length(inmorethan5s)
+sum(sum(subset$inmorethan5andstream)/nrow(subset) >inboths)/length(inboths)
+
+inbothsdf = data.frame(inboths)
+ggplot(inbothsdf) + geom_histogram(aes(x = inboths), bins = 20)
+``` 
+
+```{r eval = FALSE}
+ggplot(alldata)
+```
+
+```{r eval = FALSE}
+morethan5 = byusersubset[byusersubset$count > 5,]
+subset$inmorethan5 = subset$usernameID %in% morethan5$Group.1
+subset$inmorethan5andstream = subset$inmorethan5&subset$instream
+sum(subset$instream)/nrow(subset) #41% of the firehose subset was represented in the stream
+sum(subset$inmorethan5)/ nrow(subset) #69% of the tweets came from the more than 5 tweeters
+nrow(morethan5)/nrow(subset) #2% of users have more than 5 tweets in the subset
+sum(subset$inmorethan5andstream)/nrow(subset) #31% of tweets were both in the stream and came from more than 5ers
+
+morethan5tweets = subset[subset$usernameID %in% morethan5$Group.1,]
+```
+#######################
+#######################
+######################
+
+
 ```{r setup, include=TRUE}
 require(twitteR)
 require(ggplot2)
@@ -37,44 +80,202 @@ length(unique(alldata$usernameID))/nrow(alldata)
 
 
 ```
+#########
+Don't run the below block more than once a session, as it samples.
+#########
 ```{r}
 # byuser = aggregate(alldata$tweetID, by = list(alldata$usernameID), FUN = count)
 # the above line was left to run overnight and still didn't complete. sad.
 
-subset = alldata[sample(1:nrow(alldata), 50000),]
+subset = alldata[sample(1:nrow(alldata), 500000),]
+```
+
+```{r}
 byusersubset = aggregate(subset$tweetID, by = list(subset$usernameID), FUN = length)
-morethan5 = byusersubset[byusersubset$x > 5,]
-subset$inmorethan5 = subset$usernameID %in% morethan5$Group.1
-subset$inmorethan5andstream = subset$inmorethan5&subset$instream
-#test statistic is
-sum(subset$instream)/nrow(subset) #41% of the firehose subset was represented in the stream
-sum(subset$inmorethan5)/ nrow(subset) #69% of the tweets came from the more than 5 tweeters
-nrow(morethan5)/nrow(subset) #2% of users have more than 5 tweets in the subset
-sum(subset$inmorethan5andstream)/nrow(subset) #31% of tweets were both in the stream and came from more than 5ers
+names(byusersubset) = c('User ID', 'count')
+subset$date = as.Date(subset$time)
 
-morethan5tweets = subset[subset$usernameID %in% morethan5$Group.1,]
+```
+##################
+#################
+
+
+
+Below, we generate an overall distribution. I manually select low, medium, and high volume users.
+```{r}
+bins = c(1,5, 25)
+
+overall_ID_ranges= lapply(bins, 
+                        function(i){
+                          if(i == 1){
+                            return(byusersubset[byusersubset$count<5,])
+                          }
+                          else if (i == 25){
+                            return(byusersubset[byusersubset$count >= 25,])
+                          } else {
+                          byusersubset[byusersubset$count >= 5 & byusersubset$count<25,]
+                          }
+                          })
+names(overall_ID_ranges) = c("LOW", 'MED', 'HIGH')
 ```
 
-```{r}
-#hypothesis testing
-instreams = numeric()
-inmorethan5s = numeric()
-inboths = numeric()morethan5s = append(inmorethan5s, sum(bs %in% morethan5tweets$tweetID)/nrow(subset))
-  inboths = append(inboths, sum(bs%in% morethan5tweets$tweetID &bs%in%tweet_streaming)/nrow(subset))
+Below, I calculate counts of people that ever show up in the streaming API feed.
+```{r eval = TRUE}
+overallstats = numeric()
+fromstreamstats = numeric()
+alldata_stream = unique(alldata[alldata$instream,]$usernameID)
+# for (i in 1:3){
+#   rangedf = overall_ID_ranges[[i]]
+#   instream = sum(rangedf$`User ID` %in% alldata_stream)/nrow(rangedf)
+#   overallstats = append(overallstats, instream)
+# }
+for (i in 1:3){
+  rangedf = overall_ID_ranges[[i]]
+  inrange = sum(alldata_stream %in% rangedf$`User ID`)#/length(alldata_stream)
+  fromstreamstats = append(fromstreamstats, inrange)
 }
-for (i in 1:1000) {
-  bs = sample(subset$tweetID, size = nrow(subset), replace = TRUE)
-  instreams = append(instreams, sum(bs %in% tweet_streaming)/nrow(subset))
-  in
+```
 
-sum(sum(subset$inmorethan5)/nrow(subset) > inmorethan5s)/length(inmorethan5s)
-sum(sum(subset$inmorethan5andstream)/nrow(subset) >inboths)/length(inboths)
+Now let's do some SRS. The sample size is 528592 elements, and the population size is 1280166. We sample without replacement. 
+```{r}
+totalsimstats = data.frame(LOW = 0, MED = 0, HIGH = 0)
+for (k in 1:10000){
+  simindices = sample(1:length(tweet_firehose), size = length(tweet_streaming))
+  simulatedstream = unique(alldata[simindices,]$usernameID)
+  simstreamstats = numeric()
+  for(i in 1:3){
+    
+    rangedf = overall_ID_ranges[[i]]
+    inrange = sum(simulatedstream %in% rangedf$`User ID`)#/length(simulatedstream)
+    simstreamstats = append(simstreamstats, inrange)
+  }
+  totalsimstats[k,] = simstreamstats
+}
+```
 
-inbothsdf = data.frame(inboths)
-ggplot(inbothsdf) + geom_histogram(aes(x = inboths), bins = 20)
-``` 
+Calculating a p value
+```{r}
+chisquare = function(O,E){
+  sum((O-E)**2/E)
+}
+totalsimstatschisquare = numeric()
+firehosecounts = c(44118, 6089, 2377)
+for (i in 1:nrow(totalsimstats)){
+  totalsimstatschisquare = append(totalsimstatschisquare, 
+                                  chisquare(totalsimstats[i,], firehosecounts *528592/1280166))
+}
+samplechisquare = chisquare(fromstreamstats, firehosecounts)
+
+print(samplechisquare)
+
+sum(samplechisquare < totalsimstatschisquare)/length(totalsimstatschisquare)
+
+as.data.frame(totalsimstatschisquare)
+ggplot(as.data.frame(totalsimstatschisquare), aes(x = totalsimstatschisquare)) + geom_histogram()
+```
+
+
+Generate a list of appearance frequencies of userIDs
+```{r}
+appearances = numeric()
+userappearance = character()
+for (i in unique(alldata$usernameID)){
+  appearances = append(appearances, sum(alldata$usernameID == i))
+  userappearance = append(userappearance, i)
+}
+```
 
 ```{r}
-ggplot(alldata)
+appearancesdf$num = 1:nrow(appearancesdf)
+appearancesdf$appearances = sort(appearancesdf$appearances)
+appearancesdf$appfact = cut(appearancesdf$appearances, c(0, 5, 25, 1000))
+levels(appearancesdf$appfact) = c(levels(appearancesdf$appfact),(as.character(">1000")))
+appearancesdf$appfact[is.na(appearancesdf$appfact)] = as.factor(as.character(">1000"))
+# ggplot(appearancesdf, aes(x = appfact)) + geom_bar() + 
+
+summarybrackets = ddply(appearancesdf, .(appfact), summarize, y=length(appfact))
+tweetsperbracket = ddply(appearancesdf, .(appfact), summarize, y = sum(appearances))
+ggsave("users.jpg", ggplot(summarybrackets, aes(x = appfact, y = y, fill = appfact)) + geom_bar(stat = "identity") + labs(x = "Number of appearances per User", y = "Number of users in bracket", title = "Number of users per tweet bracket") + guides(fill=guide_legend(title="Bracket")))
+
+ggsave("tweets.jpg", ggplot(tweetsperbracket, aes(x = appfact, y = y, fill = appfact)) + geom_bar(stat = "identity")+ labs(x = "Number of appearances per User", y = "Total tweets of users in bracket", title = "Number of tweets per tweet bracket") + guides(fill=guide_legend(title="Bracket")))
+
+
+
+
+
+
 ```
+
+
+Let's look at per days.
+
+```{r}
+alldata$day = as.Date(alldata$time)
+
+alldata$day = as.factor(alldata$day)
+
+byday = function(day){
+  alldata[alldata$day == day, ]
+}
+
+daylist = lapply(levels(alldata$day), byday)
+
+aggbyID = function(df){
+  aggregate(df$tweetID, by = list(df$usernameID), FUN = length)
+}
+
+daylistusersubset = lapply(daylist, aggbyID)
+
+
+ 
+usersubsetting = function(df){
+  lapply(bins, function(i){
+                        if(i == 1){
+                          return(df[df$x<5,])
+                        }
+                        else if (i == 25){
+                          return(df[df$x >= 25,])
+                        } else {
+                        df[df$x >= 5 & df$x<25,]
+                        }
+                        })
+}
+
+daylistusersubsetbybracket = lapply(daylistusersubset, usersubsetting)
+
+```
+
+```{r}
+bracketstatsbyday = function(lst, thisday){
+  fromstreamstatsbyday = numeric()
+  alldata_stream_day = unique(alldata[alldata$day == thisday,][alldata$instream,]$usernameID)
+  for (i in 1:3){
+    rangedf = lst[[i]]
+    inrange = sum(alldata_stream_day %in% rangedf$`Group.1`)/length(alldata_stream_day)
+    fromstreamstatsbyday = append(fromstreamstatsbyday, inrange)
+    print(length((alldata_stream_day)))
+  }
+  return(fromstreamstatsbyday)
+  
+  
+}
+
+
+sumstatsbyday = list()
+for (i in 1){
+  
+  sumstatsthisday = bracketstatsbyday(daylistusersubsetbybracket[[i]], levels(alldata$day)[i])
+  sumstatsbyday = append(sumstatsbyday, sumstatsthisday)
+}
+
+
+
+
+```
+
+```{r}
+ggsave("userhist.jpg",ggplot(byusersubset, aes(x= count)) + geom_histogram(bins = 100) + scale_x_log10())
+```
+
+
 
